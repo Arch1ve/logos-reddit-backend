@@ -2,17 +2,17 @@ import {model, Schema} from "mongoose";
 import isEmail from "validator/lib/isEmail";
 
 interface Comment {
-  author: string;
+  author: Schema.Types.ObjectId;
   description: string;
   shortDescription: string;
-  likes: Schema.Types.ObjectId;
+  likes: Schema.Types.ObjectId[];
   totallikes: String;
   createdAt: Date;
 }
 
 const CommentSchema = new Schema<Comment>({
   author: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
   },
   description: {
@@ -20,14 +20,14 @@ const CommentSchema = new Schema<Comment>({
     required: true,
   },
   likes: {
-    type: [Schema.Types.ObjectId],
-    ref: "user",
+    type: [{type:Schema.Types.ObjectId, ref:"user"}],
     required: true,
     default: []
   },
   totallikes: {
-    type: String,
+    type: Number,
     required: true,
+    default: 0,
   },
   createdAt: {
     type: Date,

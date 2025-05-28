@@ -39,9 +39,9 @@ app.get("/", (req: Request, res: Response) => {
  })
 
  app.post("/post/create", (req: Request, res: Response) => {
-   const {author, title, description, shortDescription, likes, totallikes, createdAt} = req.body
+   const {author, title, description, shortDescription} = req.body
 
-   Post.create({ author, title, description, shortDescription, likes, totallikes, createdAt })
+   Post.create({ author, title, description, shortDescription })
      .then((post) => {
        res.send(post)
      })
@@ -62,29 +62,39 @@ app.get("/", (req: Request, res: Response) => {
      })
  })
 
- app.post("/comment/create", (req: Request, res: Response) => {
-   const {author, description, likes, totallikes, createdAt} = req.body
+app.post("/comment/create/:postId", (req: Request, res: Response) => {
+  const { author, description, likes, totallikes, createdAt } = req.body;
+  const postId = req.params.postId;
 
-   Comment.create({ author, description, likes, totallikes, createdAt })
-     .then((comment) => {
-       res.send(comment)
-     })
-     .catch((err) => {
-       console.log(err);
-       res.status(403).send()
-     })
- }) 
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res.status(400).send("Неверный ID поста");
+  }
 
- app.get("/comments", (req: Request, res: Response) => {
-   Comment.find({})
-   .then((comments) => {
-      res.send(comments)
-   })
-   .catch((err) => {
-       console.log(err);
-       res.status(403).send()
-     })
- })
+  Comment.create({ author, description, likes, totallikes, createdAt })
+    .then((comment) => {
+      Post.findByIdAndUpdate(
+        postId,
+        { $push: { comments: comment._id } },
+        { new: true }
+      )
+        .then((post) => {
+          if (!post) {
+            Comment.deleteOne({ _id: comment._id }).exec();
+            return res.status(404).send("Пост не найден");
+          }
+          res.send(comment);
+        })
+        .catch((err) => {
+          console.log(err);
+          Comment.deleteOne({ _id: comment._id }).exec();
+          res.status(500).send("Ошибка при обновлении поста");
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(400).send(err);
+    });
+});
 
 app.use((req: Request, res: Response) => res.status(404).send("Страница не найдена"));
 

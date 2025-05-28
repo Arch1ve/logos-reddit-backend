@@ -2,46 +2,54 @@ import {model, Schema} from "mongoose";
 import isEmail from "validator/lib/isEmail";
 
 interface Post {
-  author: string;
+  author: Schema.Types.ObjectId;
   title: string;
   description: string;
   shortDescription: string;
-  likes: Schema.Types.ObjectId;
+  likes: Schema.Types.ObjectId[];
   totallikes: String;
   createdAt: Date;
+  comments: Schema.Types.ObjectId[];
 }
 
 const PostSchema = new Schema<Post>({
   author: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
   },
   title: {
     type: String,
     required: true,
+    maxlength: 25,
   },
   description: {
     type: String,
     required: true,
   },
   shortDescription: {
-    type: String
+    type: String,
+    required: true,
+    maxlength: 50,
   },
   likes: {
-    type: [Schema.Types.ObjectId],
-    ref: "user",
+    type: [{type:Schema.Types.ObjectId, ref:"user"}],
     required: true,
     default: []
   },
   totallikes: {
-    type: String,
+    type: Number,
     required: true,
     default: 0,
   },
   createdAt: {
     type: Date,
-    required: false,
+    required: true,
     default: Date.now,
+  },
+  comments: {
+    type: [{type:Schema.Types.ObjectId, ref:"comments"}],
+    required: true,
+    default: []
   }
 
 })
