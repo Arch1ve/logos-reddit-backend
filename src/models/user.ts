@@ -1,13 +1,18 @@
-import {model, Schema} from "mongoose";
+import {Document, Model, model, Schema} from "mongoose";
 import isEmail from "validator/lib/isEmail";
+import bcrypt from 'bcryptjs';
 
-interface User {
+interface IUser {
   password: string;
   email: string;
   username: string;
 }
 
-const UserSchema = new Schema<User>({
+interface UserModel extends Model<IUser> {
+  findUserByCredentials: (email: string, password: string) => Promise<Document<unknown, any, IUser>>
+}
+
+const UserSchema = new Schema<IUser, UserModel>({
   email: {
     type: String,
     required: true,
@@ -27,7 +32,22 @@ const UserSchema = new Schema<User>({
   }
 })
 
+UserSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
+  return this.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          return Promise.reject(new Error('Неправильные почта или пароль'));
+        }
+
+        return user;
+      });
+    });
+});
 
 
-
-export default model<User>("user", UserSchema);
+export default model<IUser, UserModel>("user", UserSchema);
