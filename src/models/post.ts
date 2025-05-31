@@ -47,7 +47,7 @@ const PostSchema = new Schema<Post>({
     default: Date.now,
   },
   comments: {
-    type: [{type:Schema.Types.ObjectId, ref:"comments"}],
+    type: [{type:Schema.Types.ObjectId, ref:"comment"}],
     required: true,
     default: []
   }
