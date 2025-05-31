@@ -1,55 +1,21 @@
 import express, { Request, Response } from 'express';
 import * as mongoose from "mongoose";
-import User from "./models/user";
 import Post from "./models/post";
 import Comment from "./models/comment";
+import { DATABASE_URL, PORT } from './config';
+import {createUser, getCurrentUser, login} from "./controllers/users";
+import auth from "./middlewares/auth";
+import SessionRequest from "./types/sessionRequest";
 
-mongoose.connect("mongodb://localhost:27017/logos");
+
+mongoose.connect(DATABASE_URL || "");
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Работает")
-})
-
- app.post("/user/create", (req: Request, res: Response) => {
-   const {email, password, username} = req.body
-
-   User.create({ email, password, username })
-     .then((user) => {
-       res.send(user)
-     })
-     .catch((err) => {
-       console.log(err);
-       res.status(403).send()
-     })
- })
-
- app.get("/users", (req: Request, res: Response) => {
-   User.find({})
-   .then((users) => {
-      res.send(users)
-   })
-   .catch((err) => {
-       console.log(err);
-       res.status(403).send()
-     })
- })
-
- app.post("/post/create", (req: Request, res: Response) => {
-   const {author, title, description, shortDescription} = req.body
-
-   Post.create({ author, title, description, shortDescription })
-     .then((post) => {
-       res.send(post)
-     })
-     .catch((err) => {
-       console.log(err);
-       res.status(403).send()
-     })
- })
+app.post("/user/register", createUser)
+app.post("/user/login", login)
 
  app.get("/posts", (req: Request, res: Response) => {
    Post.find({})
@@ -57,20 +23,41 @@ app.get("/", (req: Request, res: Response) => {
       res.send(posts)
    })
    .catch((err) => {
-       console.log(err);
-       res.status(403).send()
-     })
+     return res.status(500).send("Ошибка сервера");
+   })
  })
 
+// AUTH MIDDLEWARE
+app.use(auth)
+
+app.get("/user/me", getCurrentUser)
+
+app.post("/post/create", (req: SessionRequest, res: Response) => {
+  // @ts-ignore
+  const userId = req.user._id;
+  const { title, description, shortDescription} = req.body
+
+  Post.create({ author: userId, title, description, shortDescription })
+    .then((post) => {
+      res.send(post)
+    })
+    .catch((err) => {
+      res.status(403).send("Переданы некорректные данные")
+    })
+})
+
 app.post("/comment/create/:postId", (req: Request, res: Response) => {
-  const { author, description, likes, totallikes, createdAt } = req.body;
+  // @ts-ignore
+  const userId = req.user._id;
   const postId = req.params.postId;
+
+  const { description } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     return res.status(400).send("Неверный ID поста");
   }
 
-  Comment.create({ author, description, likes, totallikes, createdAt })
+  Comment.create({ author: userId, description })
     .then((comment) => {
       Post.findByIdAndUpdate(
         postId,
@@ -99,6 +86,6 @@ app.post("/comment/create/:postId", (req: Request, res: Response) => {
 app.use((req: Request, res: Response) => res.status(404).send("Страница не найдена"));
 
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${3000}`);
 });
