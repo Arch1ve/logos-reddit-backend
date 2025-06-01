@@ -20,7 +20,7 @@ const CommentSchema = new Schema<Comment>({
     required: true,
   },
   likes: {
-    type: [{type:Schema.Types.ObjectId, ref:"user"}],
+    type: [{type:Schema.Types.ObjectId, ref:"userlikescomment"}],
     required: true,
     default: []
   },
