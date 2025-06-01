@@ -6,11 +6,14 @@ import { DATABASE_URL, PORT } from './config';
 import {createUser, getCurrentUser, login} from "./controllers/users";
 import auth from "./middlewares/auth";
 import SessionRequest from "./types/sessionRequest";
+import cors from "cors";
 
 
 mongoose.connect(DATABASE_URL || "");
 const app = express();
 
+app.use(cors());
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
