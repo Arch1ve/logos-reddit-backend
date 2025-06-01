@@ -2,7 +2,7 @@ import {model, Schema} from "mongoose";
 import isEmail from "validator/lib/isEmail";
 
 interface Post {
-  author: Schema.Types.ObjectId;
+  author: String;
   title: string;
   description: string;
   shortDescription: string;
@@ -14,7 +14,8 @@ interface Post {
 
 const PostSchema = new Schema<Post>({
   author: {
-    type: Schema.Types.ObjectId,
+    type: String, 
+    ref: 'User',
     required: true,
   },
   title: {

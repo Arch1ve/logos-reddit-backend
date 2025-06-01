@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import * as mongoose from "mongoose";
 import Post from "./models/post";
+import User from "./models/user";
 import Comment from "./models/comment";
 import { DATABASE_URL, PORT } from './config';
 import {createUser, getCurrentUser, login} from "./controllers/users";
@@ -20,15 +21,34 @@ app.use(express.urlencoded({ extended: true }));
 app.post("/user/register", createUser)
 app.post("/user/login", login)
 
- app.get("/posts", (req: Request, res: Response) => {
+app.get("/posts", (req: Request, res: Response) => {
    Post.find({})
+   .populate("user")
    .then((posts) => {
       res.send(posts)
    })
    .catch((err) => {
-     return res.status(500).send("Ошибка сервера");
+    console.log(err)
+    return res.status(500).send("Ошибка сервера");
    })
  })
+
+app.get("/post/:id", (req: Request, res: Response) => {
+  const postId = req.params.id;
+  
+  Post.findById(postId)
+    //.populate('comment')
+    .then((post) => {
+      if (!post) {
+        return res.status(404).send("Пост не найден");
+      }
+      res.send(post);
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).send("Ошибка сервера");
+    })
+})
 
 // AUTH MIDDLEWARE
 app.use(auth)
@@ -92,3 +112,6 @@ app.use((req: Request, res: Response) => res.status(404).send("Страница 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${3000}`);
 });
+
+
+
