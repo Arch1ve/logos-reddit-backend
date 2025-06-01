@@ -1,21 +1,20 @@
 import {model, Schema} from "mongoose";
-import isEmail from "validator/lib/isEmail";
 
 interface Post {
-  author: String;
+  author: Schema.Types.ObjectId;
   title: string;
   description: string;
   shortDescription: string;
   likes: Schema.Types.ObjectId[];
-  totallikes: String;
+  totallikes: Number;
   createdAt: Date;
   comments: Schema.Types.ObjectId[];
 }
 
 const PostSchema = new Schema<Post>({
   author: {
-    type: String, 
-    ref: 'User',
+    type: Schema.Types.ObjectId,
+    ref: 'user',
     required: true,
   },
   title: {
@@ -52,7 +51,6 @@ const PostSchema = new Schema<Post>({
     required: true,
     default: []
   }
-
 })
 
 export default model<Post>("post", PostSchema);

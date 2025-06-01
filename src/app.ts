@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import * as mongoose from "mongoose";
 import Post from "./models/post";
-import User from "./models/user";
 import Comment from "./models/comment";
 import { DATABASE_URL, PORT } from './config';
 import {createUser, getCurrentUser, login} from "./controllers/users";
@@ -23,19 +22,18 @@ app.post("/user/login", login)
 
 app.get("/posts", (req: Request, res: Response) => {
    Post.find({})
-   .populate("user")
+   .populate("author")
    .then((posts) => {
       res.send(posts)
    })
    .catch((err) => {
-    console.log(err)
     return res.status(500).send("Ошибка сервера");
    })
  })
 
 app.get("/post/:id", (req: Request, res: Response) => {
   const postId = req.params.id;
-  
+
   Post.findById(postId)
     //.populate('comment')
     .then((post) => {
