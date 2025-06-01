@@ -7,7 +7,7 @@ import {createUser, getCurrentUser, login} from "./controllers/users";
 import auth from "./middlewares/auth";
 import SessionRequest from "./types/sessionRequest";
 import cors from "cors";
-
+import path from 'path';
 
 mongoose.connect(DATABASE_URL || "");
 const app = express();
@@ -17,10 +17,10 @@ app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/user/register", createUser)
-app.post("/user/login", login)
+app.post("/api/user/register", createUser)
+app.post("/api/user/login", login)
 
-app.get("/posts", (req: Request, res: Response) => {
+app.get("/api/posts", (req: Request, res: Response) => {
    Post.find({})
    .populate("author")
    .then((posts) => {
@@ -31,7 +31,7 @@ app.get("/posts", (req: Request, res: Response) => {
    })
  })
 
-app.get("/post/:id", (req: Request, res: Response) => {
+app.get("/api/post/:id", (req: Request, res: Response) => {
   const postId = req.params.id;
 
   Post.findById(postId)
@@ -51,9 +51,9 @@ app.get("/post/:id", (req: Request, res: Response) => {
 // AUTH MIDDLEWARE
 app.use(auth)
 
-app.get("/user/me", getCurrentUser)
+app.get("/api/user/me", getCurrentUser)
 
-app.post("/post/create", (req: SessionRequest, res: Response) => {
+app.post("/api/post/create", (req: SessionRequest, res: Response) => {
   // @ts-ignore
   const userId = req.user._id;
   const { title, description, shortDescription} = req.body
@@ -67,7 +67,7 @@ app.post("/post/create", (req: SessionRequest, res: Response) => {
     })
 })
 
-app.post("/comment/create/:postId", (req: Request, res: Response) => {
+app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
   // @ts-ignore
   const userId = req.user._id;
   const postId = req.params.postId;
@@ -104,7 +104,15 @@ app.post("/comment/create/:postId", (req: Request, res: Response) => {
     });
 });
 
-app.use((req: Request, res: Response) => res.status(404).send("Страница не найдена"));
+app.use(express.static(path.join(__dirname, '../logos-reddit/dist')));
+
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../logos-reddit/dist', 'index.html'));
+  } else {
+    res.status(404).json({ message: 'API route not found' });
+  }
+});
 
 
 app.listen(PORT, () => {
