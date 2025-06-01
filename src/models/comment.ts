@@ -13,7 +13,7 @@ interface Comment {
 const CommentSchema = new Schema<Comment>({
   author: {
     type: Schema.Types.ObjectId,
-    required: true,
+    required: false,
   },
   description: {
     type: String,

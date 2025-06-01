@@ -35,7 +35,7 @@ app.get("/api/post/:id", (req: Request, res: Response) => {
   const postId = req.params.id;
 
   Post.findById(postId)
-    //.populate('comment')
+    .populate('comments')
     .then((post) => {
       if (!post) {
         return res.status(404).send("Пост не найден");
@@ -71,13 +71,12 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
   // @ts-ignore
   const userId = req.user._id;
   const postId = req.params.postId;
-
+  
   const { description } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     return res.status(400).send("Неверный ID поста");
   }
-
   Comment.create({ author: userId, description })
     .then((comment) => {
       Post.findByIdAndUpdate(
@@ -94,7 +93,7 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
         })
         .catch((err) => {
           console.log(err);
-          Comment.deleteOne({ _id: comment._id }).exec();
+          //Comment.deleteOne({ _id: comment._id }).exec();
           res.status(500).send("Ошибка при обновлении поста");
         });
     })
@@ -106,7 +105,7 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
 
 app.use(express.static(path.join(__dirname, '../logos-reddit/dist')));
 
-app.get('*', (req, res) => {
+app.get('*', (req, res) => { 
   if (!req.path.startsWith('/api')) {
     res.sendFile(path.join(__dirname, '../logos-reddit/dist', 'index.html'));
   } else {
