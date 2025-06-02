@@ -10,6 +10,10 @@ const extractBearerToken = (header: string) => header.replace('Bearer ', '');
 export default (req: SessionRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
+  if (!req.path.startsWith('/api')) {
+    return next()
+  }
+
   if (!authorization || !authorization.startsWith('Bearer ')) {
     return res.status(401).send('Необходима авторизация')
 
