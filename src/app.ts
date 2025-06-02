@@ -20,14 +20,14 @@ app.use(express.urlencoded({ extended: true }));
 app.post("/api/user/register", createUser)
 app.post("/api/user/login", login)
 
-// ▼▼▼ НОВЫЙ РОУТ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ ПОСТОВ ▼▼▼
+
 app.get("/api/posts", async (req: Request, res: Response) => {
   try {
     const posts = await Post.find()
-      .populate("author", "username") // Получаем только username автора
-      .select("_id title shortDescription fullDescription author totallikes createdAt") // Выбираем нужные поля
-      .sort({ createdAt: -1 }) // Сортировка по умолчанию: новые сначала
-      .lean(); // Для лучшей производительности
+      .populate("author", "username") 
+      .select("_id title shortDescription fullDescription author totallikes createdAt") 
+      .sort({ createdAt: -1 }) 
+      .lean(); 
 
     res.json(posts);
   } catch (error) {
