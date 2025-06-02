@@ -20,16 +20,21 @@ app.use(express.urlencoded({ extended: true }));
 app.post("/api/user/register", createUser)
 app.post("/api/user/login", login)
 
-app.get("/api/posts", (req: Request, res: Response) => {
-   Post.find({})
-   .populate("author")
-   .then((posts) => {
-      res.send(posts)
-   })
-   .catch((err) => {
-    return res.status(500).send("Ошибка сервера");
-   })
- })
+// ▼▼▼ НОВЫЙ РОУТ ДЛЯ ПОЛУЧЕНИЯ ВСЕХ ПОСТОВ ▼▼▼
+app.get("/api/posts", async (req: Request, res: Response) => {
+  try {
+    const posts = await Post.find()
+      .populate("author", "username") // Получаем только username автора
+      .select("_id title shortDescription fullDescription author totallikes createdAt") // Выбираем нужные поля
+      .sort({ createdAt: -1 }) // Сортировка по умолчанию: новые сначала
+      .lean(); // Для лучшей производительности
+
+    res.json(posts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Ошибка сервера при получении постов");
+  }
+});
 
 app.get("/api/post/:id", (req: Request, res: Response) => {
   const postId = req.params.id;
@@ -80,6 +85,32 @@ app.post("/api/post/:id/like", async (req: SessionRequest, res: Response) => {
   }
 });
 
+app.post("/api/comment/:id/like", async (req: SessionRequest, res: Response) => {
+  try {
+    const commentId = req.params.id;
+    // @ts-ignore
+    const userId = req.user._id;
+
+    const updatedComment = await Comment.findByIdAndUpdate(
+      commentId,
+      {
+        $addToSet: { likes: userId },
+        $inc: { totallikes: 1 }
+      },
+      { new: true }
+    );
+
+    if (!updatedComment) {
+      return res.status(404).send("Комментарий не найден");
+    }
+
+    res.send(updatedComment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Ошибка сервера");
+  }
+});
+
 app.post("/api/post/:id/dislike", async (req: SessionRequest, res: Response) => {
   try {
     const postId = req.params.id;
@@ -106,31 +137,6 @@ app.post("/api/post/:id/dislike", async (req: SessionRequest, res: Response) => 
   }
 });
 
-app.post("/api/comment/:id/like", async (req: SessionRequest, res: Response) => {
-  try {
-    const commentId = req.params.id;
-    // @ts-ignore
-    const userId = req.user._id;
-
-    const updatedComment = await Comment.findByIdAndUpdate(
-      commentId,
-      {
-        $addToSet: { likes: userId },
-        $inc: { totalLikes: 1 }
-      },
-      { new: true }
-    );
-
-    if (!updatedComment) {
-      return res.status(404).send("Комментарий не найден");
-    }
-
-    res.send(updatedComment);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Ошибка сервера");
-  }
-});
 
 app.post("/api/comment/:id/dislike", async (req: SessionRequest, res: Response) => {
   try {
@@ -141,8 +147,8 @@ app.post("/api/comment/:id/dislike", async (req: SessionRequest, res: Response) 
     const updatedComment = await Comment.findByIdAndUpdate(
       commentId,
       {
-        $pull: { likes: userId }, // удаляем пользователя из массива лайков
-        $inc: { totalLikes: -1 }   // уменьшаем счетчик лайков
+        $pull: { likes: userId }, 
+        $inc: { totallikes: -1 }   
       },
       { new: true }
     );
@@ -198,7 +204,6 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
         })
         .catch((err) => {
           console.log(err);
-          //Comment.deleteOne({ _id: comment._id }).exec();
           res.status(500).send("Ошибка при обновлении поста");
         });
     })
@@ -218,10 +223,6 @@ app.get('*', (req, res) => {
   }
 });
 
-
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${3000}`);
 });
-
-
-
