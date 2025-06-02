@@ -32,7 +32,7 @@ const PostSchema = new Schema<Post>({
     maxlength: 50,
   },
   likes: {
-    type: [{type:Schema.Types.ObjectId, ref:"userlikes"}],
+    type: [{type:Schema.Types.ObjectId, ref:"user"}],
     required: true,
     default: []
   },

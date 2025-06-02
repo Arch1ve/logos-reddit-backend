@@ -35,8 +35,8 @@ app.get("/api/post/:id", (req: Request, res: Response) => {
   const postId = req.params.id;
 
   Post.findById(postId)
-    .populate({path:"comments", populate: {path: "author"}})
     .populate("author")
+    .populate({path:"comments", populate: {path: "author", model: "user"}})
     .then((post) => {
       if (!post) {
         return res.status(404).send("Пост не найден");
@@ -57,16 +57,16 @@ app.get("/api/user/me", getCurrentUser)
 app.post("/api/post/:id/like", async (req: SessionRequest, res: Response) => {
   try {
     const postId = req.params.id;
-    // @ts-ignore 
+    // @ts-ignore
     const userId = req.user._id;
 
     const updatedPost = await Post.findByIdAndUpdate(
       postId,
       {
-        $addToSet: { likes: userId }, 
-        $inc: { totallikes: 1 }     
+        $addToSet: { likes: userId },
+        $inc: { totallikes: 1 }
       },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedPost) {
@@ -89,8 +89,8 @@ app.post("/api/post/:id/dislike", async (req: SessionRequest, res: Response) => 
     const updatedPost = await Post.findByIdAndUpdate(
       postId,
       {
-        $pull: { likes: userId }, 
-        $inc: { totallikes: -1 }   
+        $pull: { likes: userId },
+        $inc: { totallikes: -1 }
       },
       { new: true }
     );
@@ -115,8 +115,8 @@ app.post("/api/comment/:id/like", async (req: SessionRequest, res: Response) => 
     const updatedComment = await Comment.findByIdAndUpdate(
       commentId,
       {
-        $addToSet: { likes: userId }, 
-        $inc: { totalLikes: 1 }       
+        $addToSet: { likes: userId },
+        $inc: { totalLikes: 1 }
       },
       { new: true }
     );
@@ -176,7 +176,7 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
   // @ts-ignore
   const userId = req.user._id;
   const postId = req.params.postId;
-  
+
   const { description } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
@@ -210,7 +210,7 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
 
 app.use(express.static(path.join(__dirname, '../logos-reddit/dist')));
 
-app.get('*', (req, res) => { 
+app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
     res.sendFile(path.join(__dirname, '../logos-reddit/dist', 'index.html'));
   } else {

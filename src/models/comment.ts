@@ -1,5 +1,4 @@
 import {model, Schema} from "mongoose";
-import isEmail from "validator/lib/isEmail";
 
 interface Comment {
   author: Schema.Types.ObjectId;
@@ -20,7 +19,7 @@ const CommentSchema = new Schema<Comment>({
     required: true,
   },
   likes: {
-    type: [{type:Schema.Types.ObjectId, ref:"userlikescomment"}],
+    type: [{type:Schema.Types.ObjectId, ref:"user"}],
     required: true,
     default: []
   },
