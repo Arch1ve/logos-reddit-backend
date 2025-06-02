@@ -6,7 +6,7 @@ interface Comment {
   description: string;
   shortDescription: string;
   likes: Schema.Types.ObjectId[];
-  totallikes: String;
+  totallikes: Number;
   createdAt: Date;
 }
 
