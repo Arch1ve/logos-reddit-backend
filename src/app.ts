@@ -24,10 +24,10 @@ app.post("/api/user/login", login)
 app.get("/api/posts", async (req: Request, res: Response) => {
   try {
     const posts = await Post.find()
-      .populate("author", "username") 
-      .select("_id title shortDescription fullDescription author totallikes createdAt") 
-      .sort({ createdAt: -1 }) 
-      .lean(); 
+      .populate("author", "username")
+      .select("_id title shortDescription fullDescription author totallikes createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json(posts);
   } catch (error) {
@@ -137,6 +137,31 @@ app.post("/api/post/:id/dislike", async (req: SessionRequest, res: Response) => 
   }
 });
 
+app.post("/api/comment/:id/like", async (req: SessionRequest, res: Response) => {
+  try {
+    const commentId = req.params.id;
+    // @ts-ignore
+    const userId = req.user._id;
+
+    const updatedComment = await Comment.findByIdAndUpdate(
+      commentId,
+      {
+        $addToSet: { likes: userId },
+        $inc: { totalLikes: 1 }
+      },
+      { new: true }
+    );
+
+    if (!updatedComment) {
+      return res.status(404).send("Комментарий не найден");
+    }
+
+    res.send(updatedComment);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Ошибка сервера");
+  }
+});
 
 app.post("/api/comment/:id/dislike", async (req: SessionRequest, res: Response) => {
   try {
@@ -147,8 +172,8 @@ app.post("/api/comment/:id/dislike", async (req: SessionRequest, res: Response) 
     const updatedComment = await Comment.findByIdAndUpdate(
       commentId,
       {
-        $pull: { likes: userId }, 
-        $inc: { totallikes: -1 }   
+        $pull: { likes: userId },
+        $inc: { totallikes: -1 }
       },
       { new: true }
     );
@@ -178,7 +203,7 @@ app.post("/api/post/create", (req: SessionRequest, res: Response) => {
     })
 })
 
-app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
+app.post("/api/comment/create/:postId", async (req: Request, res: Response) => {
   // @ts-ignore
   const userId = req.user._id;
   const postId = req.params.postId;
@@ -188,29 +213,23 @@ app.post("/api/comment/create/:postId", (req: Request, res: Response) => {
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     return res.status(400).send("Неверный ID поста");
   }
-  Comment.create({ author: userId, description })
-    .then((comment) => {
-      Post.findByIdAndUpdate(
-        postId,
-        { $push: { comments: comment._id } },
-        { new: true }
-      )
-        .then((post) => {
-          if (!post) {
-            Comment.deleteOne({ _id: comment._id }).exec();
-            return res.status(404).send("Пост не найден");
-          }
-          res.send(comment);
-        })
-        .catch((err) => {
-          console.log(err);
-          res.status(500).send("Ошибка при обновлении поста");
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).send(err);
-    });
+
+  const comment = await Comment.create({ author: userId, description });
+
+  const post = await Post.findByIdAndUpdate(
+    postId,
+    { $push: { comments: comment._id } },
+    { new: true }
+  );
+
+  if (!post) {
+    await Comment.deleteOne({ _id: comment._id });
+    return res.status(404).send("Пост не найден");
+  }
+
+  const populatedComment = await comment.populate("author");
+
+  res.send(populatedComment);
 });
 
 app.use(express.static(path.join(__dirname, '../logos-reddit/dist')));
@@ -222,6 +241,7 @@ app.get('*', (req, res) => {
     res.status(404).json({ message: 'API route not found' });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${3000}`);

@@ -12,6 +12,7 @@ interface Comment {
 const CommentSchema = new Schema<Comment>({
   author: {
     type: Schema.Types.ObjectId,
+    ref: "user",
     required: false,
   },
   description: {
