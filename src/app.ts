@@ -236,7 +236,7 @@ app.use(express.static(path.join(__dirname, '../logos-reddit/dist')));
 
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../logos-reddit/dist', 'index.html'));
+    res.sendFile(path.join(__dirname, '../../logos-reddit/dist', 'index.html'));
   } else {
     res.status(404).json({ message: 'API route not found' });
   }
