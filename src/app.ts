@@ -7,7 +7,6 @@ import {createUser, getCurrentUser, login} from "./controllers/users";
 import auth from "./middlewares/auth";
 import SessionRequest from "./types/sessionRequest";
 import cors from "cors";
-import path from 'path';
 
 mongoose.connect(DATABASE_URL || "");
 const app = express();
@@ -232,19 +231,6 @@ app.post("/api/comment/create/:postId", async (req: Request, res: Response) => {
   res.send(populatedComment);
 });
 
-const buildPath = path.join(__dirname, '../../logos-reddit/dist');
-
-app.use(express.static(buildPath));
-
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, buildPath, 'index.html'));
-  } else {
-    res.status(404).json({ message: 'API route not found' });
-  }
-});
-
-
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${3000}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
