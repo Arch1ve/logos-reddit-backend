@@ -231,8 +231,8 @@ app.post("/api/comment/create/:postId", async (req: Request, res: Response) => {
 
   res.send(populatedComment);
 });
-
 const buildPath = path.join(__dirname, '..', '..', 'logos-reddit', 'dist');
+
 
 app.use(express.static(buildPath));
 
