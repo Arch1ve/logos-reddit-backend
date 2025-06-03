@@ -232,11 +232,13 @@ app.post("/api/comment/create/:postId", async (req: Request, res: Response) => {
   res.send(populatedComment);
 });
 
-app.use(express.static(path.join(__dirname, '../logos-reddit/dist')));
+const buildPath = path.join(__dirname, '..', '..', 'logos-reddit', 'dist');
+
+app.use(express.static(buildPath));
 
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../../logos-reddit/dist', 'index.html'));
+    res.sendFile(path.join(__dirname, buildPath, 'index.html'));
   } else {
     res.status(404).json({ message: 'API route not found' });
   }
