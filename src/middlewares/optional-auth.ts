@@ -1,17 +1,16 @@
+// middlewares/optionalAuth.ts
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config';
 import SessionRequest from "../types/sessionRequest";
 
-
 const extractBearerToken = (header: string) => header.replace('Bearer ', '');
 
-// eslint-disable-next-line consistent-return
-export default (req: SessionRequest, res: Response, next: NextFunction) => {
+export default function optionalAuth(req: SessionRequest, res: Response, next: NextFunction) {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res.status(401).send('Необходима авторизация')
+    return next(); // пользователь не авторизован — продолжаем
   }
 
   const token = extractBearerToken(authorization);
@@ -30,4 +29,4 @@ export default (req: SessionRequest, res: Response, next: NextFunction) => {
   req.user = payload;
 
   next();
-};
+}

@@ -5,6 +5,7 @@ interface Comment {
   description: string;
   shortDescription: string;
   likes: Schema.Types.ObjectId[];
+  dislikes: Schema.Types.ObjectId[];
   totallikes: Number;
   createdAt: Date;
 }
@@ -24,6 +25,11 @@ const CommentSchema = new Schema<Comment>({
     required: true,
     default: []
   },
+  dislikes: {
+    type: [{type:Schema.Types.ObjectId, ref:"user"}],
+    required: true,
+    default: []
+  },
   totallikes: {
     type: Number,
     required: true,
@@ -34,7 +40,6 @@ const CommentSchema = new Schema<Comment>({
     required: true,
     default: Date.now,
   }
-
 })
 
 export default model<Comment>("comment",CommentSchema);

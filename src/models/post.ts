@@ -6,6 +6,7 @@ interface Post {
   description: string;
   shortDescription: string;
   likes: Schema.Types.ObjectId[];
+  dislikes: Schema.Types.ObjectId[];
   totallikes: Number;
   createdAt: Date;
   comments: Schema.Types.ObjectId[];
@@ -20,7 +21,7 @@ const PostSchema = new Schema<Post>({
   title: {
     type: String,
     required: true,
-    maxlength: 25,
+    maxlength: 100,
   },
   description: {
     type: String,
@@ -29,9 +30,14 @@ const PostSchema = new Schema<Post>({
   shortDescription: {
     type: String,
     required: true,
-    maxlength: 50,
+    maxlength: 300,
   },
   likes: {
+    type: [{type:Schema.Types.ObjectId, ref:"user"}],
+    required: true,
+    default: []
+  },
+  dislikes: {
     type: [{type:Schema.Types.ObjectId, ref:"user"}],
     required: true,
     default: []
